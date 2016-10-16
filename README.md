@@ -208,7 +208,7 @@ function waitAndAdd(increment, waitTime){
    }
 }
 ```
-Piper will the callback internally to use execute a composition.
+Piper will use the callback internally to execute a composition.
 
 ### Tag Methods For Non-Linear Logic
 
