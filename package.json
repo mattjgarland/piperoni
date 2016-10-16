@@ -1,0 +1,37 @@
+{
+  "name": "piper",
+  "version": "0.0.1",
+  "description": "A library for creating pipeable APIs.",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mattjgarland/piper"
+  },
+  "keywords": [
+    "promises",
+    "functional",
+    "programming",
+    "chaining",
+    "composing",
+    "Rambda"
+  ],
+  "author": "Matt Garland",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/mattjgarland/piper/issues"
+  },
+  "homepage": "https://github.com/mattjgarland/piper#readme",
+  "dependencies": {
+    "ramda": "^0.22.1"
+  },
+  "devDependencies": {
+    "mocha": "^3.1.2",
+    "mocha-cli": "^1.0.1"
+  }
+}
