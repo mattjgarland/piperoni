@@ -53,7 +53,7 @@ Piper helps you:
   ```
   _startParallel_ and _stopParallel_ are "tag" functions because, like markup tags, they apply special logic to their inner contents (here, methods calls).
 
- ### Simple Composition
+### Simple Composition
 
 "c" is for "compose"
 
@@ -85,7 +85,7 @@ Currying is huge for piping. With currying, you can:
 - Vary a function to produce other functions quickly.
 - Concentrate and express state in one place orthogonal to the data flow.  
 
- ### Creating Methods
+### Creating Methods
 
  If we could compose functions by calling chainable methods, wouldn't that look cleaner? Now you can:
 
@@ -142,8 +142,6 @@ Note: find a complete list of Ramda utilities at [Ramda Documentation](http://ra
 let Piper = require("piper")
 console.log(Piper.r.someNonCurryingFunction)
 ```
-
-
 ### Reusing, Composing and Cloning Pipes
 
 A pipe has two aspects: its methods, and the composition built up by the methods. Mixins are how you repeat the methods. Now let's repeat the composition.
@@ -188,7 +186,7 @@ To clear the composition from a pipe, _clear_ it.
 
 `let newPipe = oldPipe.clone().clear()`
 
-### ASYNC
+### Async
 
 Everything above and below applies to async as well as sync methods and functions. However, Piper does need to differentiate between async and sync functions to compose them together. Consequently, just as all sync functions should be curried to take **one** parameter, all async functions should take **two.**
 
@@ -212,7 +210,7 @@ function waitAndAdd(increment, waitTime){
 ```
 Piper will the callback internally to use execute a composition.
 
-### TAG METHODS For Non-Linear Logic
+### Tag Methods For Non-Linear Logic
 
 Here is a tag method at work:
 
