@@ -1,0 +1,119 @@
+0 info it worked if it ends with ok
+1 verbose cli [ '/Users/Matt/.nvm/v6.3.1/bin/node',
+1 verbose cli   '/Users/Matt/.nvm/v6.3.1/bin/npm',
+1 verbose cli   'publish',
+1 verbose cli   './' ]
+2 info using npm@3.10.3
+3 info using node@v6.3.1
+4 verbose publish [ './' ]
+5 silly cache add args [ './', null ]
+6 verbose cache add spec ./
+7 silly cache add parsed spec Result {
+7 silly cache add   raw: './',
+7 silly cache add   scope: null,
+7 silly cache add   escapedName: null,
+7 silly cache add   name: null,
+7 silly cache add   rawSpec: './',
+7 silly cache add   spec: '/Users/Matt/Sites/piperoni',
+7 silly cache add   type: 'directory' }
+8 verbose addLocalDirectory /Users/Matt/.npm/piperoni/0.0.1/package.tgz not in flight; packing
+9 verbose correctMkdir /Users/Matt/.npm correctMkdir not in flight; initializing
+10 info lifecycle piperoni@0.0.1~prepublish: piperoni@0.0.1
+11 silly lifecycle piperoni@0.0.1~prepublish: no script for prepublish, continuing
+12 verbose tar pack [ '/Users/Matt/.npm/piperoni/0.0.1/package.tgz',
+12 verbose tar pack   '/Users/Matt/Sites/piperoni' ]
+13 verbose tarball /Users/Matt/.npm/piperoni/0.0.1/package.tgz
+14 verbose folder /Users/Matt/Sites/piperoni
+15 verbose addLocalTarball adding from inside cache /Users/Matt/.npm/piperoni/0.0.1/package.tgz
+16 verbose correctMkdir /Users/Matt/.npm correctMkdir not in flight; initializing
+17 silly cache afterAdd piperoni@0.0.1
+18 verbose afterAdd /Users/Matt/.npm/piperoni/0.0.1/package/package.json not in flight; writing
+19 verbose correctMkdir /Users/Matt/.npm correctMkdir not in flight; initializing
+20 verbose afterAdd /Users/Matt/.npm/piperoni/0.0.1/package/package.json written
+21 silly publish { name: 'piperoni',
+21 silly publish   version: '0.0.1',
+21 silly publish   description: 'A library for creating pipeable APIs.',
+21 silly publish   main: 'index.js',
+21 silly publish   directories: { test: 'test' },
+21 silly publish   scripts: { test: 'mocha' },
+21 silly publish   repository:
+21 silly publish    { type: 'git',
+21 silly publish      url: 'git+https://github.com/mattjgarland/piperoni.git' },
+21 silly publish   keywords:
+21 silly publish    [ 'promises',
+21 silly publish      'functional',
+21 silly publish      'programming',
+21 silly publish      'chaining',
+21 silly publish      'composing',
+21 silly publish      'Rambda' ],
+21 silly publish   author: { name: 'Matt Garland' },
+21 silly publish   license: 'ISC',
+21 silly publish   bugs: { url: 'https://github.com/mattjgarland/piperoni/issues' },
+21 silly publish   homepage: 'https://github.com/mattjgarland/piperoni#readme',
+21 silly publish   dependencies: { ramda: '^0.22.1' },
+21 silly publish   devDependencies: { mocha: '^3.1.2', 'mocha-cli': '^1.0.1' },
+21 silly publish   readme: 'Piping is composing functions together, feeding the return of one function into the parameters of the next:\n\n`let output = doThis(doThat(doTheOtherThing(input)))`\n\nIsn\'t that clear? There are real benefits to modeling as much of your logic as possible on data flow pipes like this. Like, refactoring become a snap:\n\n`let output = oneMoreChange(doThis(doThat(doTheOtherThing(input))))`\n\nDo all these functions have to take one parameter? Yes. There is no free lunch. You only get the benefits of pipes if you cram your logic into pipe-like shapes.\n\nPiperoni helps you:\n\n- Fashion pipes with familiar, flexible chaining:\n\n  `myPipe.doThis().doThat.doTheOtherThing()`\n\n- Mix sync and async functions indiscriminately:\n\n  `myPipe.doAsyncThing().doSyncThing().doAnotherAsyncThing()`\n\n- Use utilities from Ramda, which gives every pipe the power of lodash or underscore:\n\n  `myPipe.zip().map().pluck().etc()`\n\n- Group, then share, related functions:\n\n   Creating methods from functions:\n\n   `myPipe.methize(doThis, doThat, doTheOtherThing)`\n\n   Turning pipes into methods of other pipes:\n\n   `myPipe.methize(myOtherPipe.funcize())`\n\n   Cloning to support variations:\n\n   `let myPipe = myOtherPipe.clone()`\n\n- Handle logic that doesn\'t fit neatly into the data-flow model, i.e, parallelism, conditionals, and no-ops, with tag methods:\n\n  ```js\n  myPipe.doThis()\n        .startParallel() //Tag function\n        .doAsync(100)\n        .doAsync(1000)\n        .doAsync(10000)\n        .stopParallel() //Tag function\n        .doTheOtherThing()\n  ```\n  _startParallel_ and _stopParallel_ are "tag" functions because, like markup tags, they apply special logic to their inner contents (here, methods calls).\n\n### Simple Composition\n\n"c" is for "compose"\n\n```js\nconst makePipe = require("piperoni").makePipe\nconst assert = require("assert")\n\nfunction addOne(x){return x + 1}\nfunction addTwo(x){return x + 2}\n\nconst pipe = makePipe()\n//Use "c" to compose the pipe.\npipe.in(0).c(addOne).c(addTwo).out((err, num) => {assert(num === 3)})\n//"in" and "out" methods handle input and output.\n//"out" is captured async style, because any function in the pipe could be async.\n```\nIf you\'ve piped before, you can guess the next optimization. The spice of Javascript is...curry:\n\n```js\n//Return not a sum but a function that adds y to whatever parameter it gets.\nfunction add(y){return x => x + y}\n//Use that higher-order function to produce a function to be composed.\npipe.in(0).c(add(1)).c(add(2)).out((err, num) => {assert(num === 3)})\n```\n\nCurrying is huge for piping. With currying, you can:\n\n- Ratchet a function down to one parameter.\n- Vary a function to produce other functions quickly.\n- Concentrate and express state in one place orthogonal to the data flow.  \n\n### Creating Methods\n\n If we could compose functions by calling chainable methods, wouldn\'t that look cleaner? Now you can:\n\n```\n pipe.methize(add)\n pipe.in(0).add(1).add(2).out((err, num) => assert(num === 3))\n ```\n\nRemember that the method is a higher-order function. _add_ is **not** being composed, the function it produces is the one actually getting piped:\n\nHIGHER-ORDER or Currying Function\n```js\nfunction add(y){return x => x + y}\n```\n\nCOMPOSED or Curried Function\n\n```js\nx => x + y\n//Javascript closure keeps _y_ alive and remembered (as 1 or 2, in this case).\n```\n\n### Mixins\n\nPiperoni allows you to group functions together as methods of a pipe. Once they populate pipes, they can also be convenientially shared between pipes.\n\nSuppose you\'ve created this pipe to manipulate files...\n\n`let filePipe = makePipe().methize(stats, readFiles, copyFiles, moveFiles)`\n\n..and this pipe to connect to a Restful API...\n\n`let restPipe = makePipe().methize(create, read, update, destroy)`\n\n...and you need functionality from both pipes:\n\n```js\n//TASK: Read files in a directory and store them online\n//First mixin the relevant pipes\nconst myPipe = makePipe().mixin(filePipe, restPipe)\nmyPipe.in("/myDirName")\n      .stats()\n      .filter(weedOutByExtension) //a Ramda utility function + your custom function\n      .c(oneOffMunging)\n      .readFiles()\n      .create("SavedFilesResource")\n      .out((err, message) => {\n         assert(message.status === "ok")\n      })\n```\nNote: find a complete list of Ramda utilities at [Ramda Documentation](http://ramdajs.com/docs/#all). All functions are exposed as pipe methods, but only the higher-order ones will work as methods. The other ones can be accessed at:\n\n```js\nlet Piperoni = require("piperoni")\nconsole.log(Piperoni.r.someNonCurryingFunction)\n```\n### Reusing, Composing and Cloning Pipes\n\nA pipe has two aspects: its methods, and the composition built up by the methods. Mixins are how you repeat the methods. Now let\'s repeat the composition.\n\nEvery time a pipe is "outed," a new composition is executed. So the same pipe can be outed repeatedly:\n\n```js\npipe.add(1).add(2)\n//First execution.\npipe.in(10).out((err, sum) => assert(sum === 13))\n//Second execution.\npipe.in(100).out((err, sum) => assert(sum === 103))\n//"in" can be called anywhere before "out"\n\n```\nThis pipe can also be used as a one-off function in another pipe...\n```js\nlet addThree = pipe.exec\notherPipe.in(0).c(addThree).out((err, num) => assert(num === 3))\n```\n\n...or transformed into a higher-order function and added as a method to another pipe:\n\n```js\notherPipe.methize(pipe.funcize("addThree"))\notherPipe.in(0).addThree().out((err, num) => assert(num === 3))\n```\nLastly, we can duplicate the pipe so the duplicate can diverge from the original composition:\n\n```js\nlet oldPipe = makePipe.methize(add).add(1).add(2)\nlet newPipe = oldPipe.clone()\n\noldPipe.add(10)//vary the original\nnewPipe.add(100)//vary the clone\n\noldPipe.in(0).out((err, sum) => assert(sum === 13))\nnewPipe.in(0).out((err, sum) => assert(sum === 103))\n```\n\nTo clear the composition from a pipe, _clear_ it.\n\n`let newPipe = oldPipe.clone().clear()`\n\n### Async\n\nEverything above and below applies to async as well as sync methods and functions. However, Piperoni does need to differentiate between async and sync functions to compose them. Consequently, just as all sync functions should be curried to take **one** parameter, all async functions should take **two.**\n\n```js\n//higher-order sync function\nfunction add(increment){\n   return num => num + increment\n}\n\n//the signature of a Piperoni async function is two params\n//the second is a Node.js-style callback\n\nfunction waitAndAdd(increment, waitTime){\n   return (num, callback) = {\n      setTimeout(() = > {\n            //No error.\n            callback(null, num + increment)\n      }), waitTime)\n   }\n}\n```\nPiperoni will use the callback internally to execute a composition.\n\n### Tag Methods For Non-Linear Logic\n\nHere is a tag method at work:\n\n```js\nmyPipe.doThis()\n      .startParallel()//TAG METHOD\n      .doAsync(100)\n      .doAsync(1000)\n      .doAsync(10000)\n      .stopParallel()//TAG METHOD\n      .map(processThreeResults)\n```\nTag methods step outside the linear flow of data from composed function to composed function. In the code above, the three functions created by _doThat_ are invoked in parallel and the results forwarded as an array to _map._\n\nAnother out-of-the-box tag method is _which_, which chooses "which" of the composed functions should be invoked.\n\n```js\nmyPipe.doThis()\n      .startWhich(chooseFuncIndex)//chooseFuncindex looks at input and returns an index of the inner functions to invoke.\n      .doAsync(100)\n      .doAsync(1000)//If chooseFuncIndex returns an index of 1, the function produced by this will be invoked.\n      .doAsync(10000)\n      .stopWhich()\n      .map(processThreeResults)\n```\n\nNo-ops/pass-throughs are also very possible:\n\n```js\nmyPipe.doThis()\n      .startMaybe(ifNecessary)//ifNecessary decides whether to invoke its children\n      .startWhich(chooseFunc)\n      .doAsync(100)\n      .doAsync(1000)\n      .doAsync(10000)\n      .stopWhich()\n      .map(processThreeResults)\n      .stopMaybe()\n```\n\nMoving conditional and non-linear logic logic out of composable functions and into Piperoni keeps the functions simpler and more reusable.  \n\nAdding your own tag methods to a pipe is trivial. Just come up with a name and an associated function that transforms the array of inner functions (the three functions produced by _doAsync_) into a new array of functions.\n\nLet\'s say we want a tag method that repeats a function in a composition. It would work like this:\n\n```js\nmyPipe.startTimes(5)\n      .add(1)//The inner functions will produce 1...\n      .add(1)//...then 2...\n      .stopTimes()//...5 times.\n      .in(0)\n      .out((err, num) => assert(num === 10))\n```\nHere\'s how we could make the tag method:\n```js\n//Create a function to replace inner composed functions with a new array of functions\nfunction times(funcs, params){\n   let newFuncs = [];\n   const num = params[0]//Grab the curry value from the tag function (how many "times"?)\n   for (var i = 0; i < num; i++){\n      newFuncs = newFuncs.concat(funcs);//Repeat the inner functions num times.\n   }\n   return newFuncs;\n}\n\n//Add a name and the associated function.\nmyPipe.tagize({times: times})\n\n//You are free to use "startTimes(myNum)" and "stopTimes()"."\n```\nTag logic often has to treat sync and async functions separately. Consult Piperoni\'s _parallel_ and _which_ implementations for guidance.\n',
+21 silly publish   readmeFilename: 'README.md',
+21 silly publish   gitHead: '3185f75d5ace2cd0001e3cd291693d2f0bd4fd0f',
+21 silly publish   _id: 'piperoni@0.0.1',
+21 silly publish   _shasum: 'f8cc3c2f44bdc4c5dcf98113b3dac30b18cb3bfb',
+21 silly publish   _from: '.' }
+22 verbose getPublishConfig undefined
+23 silly mapToRegistry name piperoni
+24 silly mapToRegistry using default registry
+25 silly mapToRegistry registry https://registry.npmjs.org/
+26 silly mapToRegistry data Result {
+26 silly mapToRegistry   raw: 'piperoni',
+26 silly mapToRegistry   scope: null,
+26 silly mapToRegistry   escapedName: 'piperoni',
+26 silly mapToRegistry   name: 'piperoni',
+26 silly mapToRegistry   rawSpec: '',
+26 silly mapToRegistry   spec: 'latest',
+26 silly mapToRegistry   type: 'tag' }
+27 silly mapToRegistry uri https://registry.npmjs.org/piperoni
+28 verbose publish registryBase https://registry.npmjs.org/
+29 silly publish uploading /Users/Matt/.npm/piperoni/0.0.1/package.tgz
+30 verbose request uri https://registry.npmjs.org/piperoni
+31 verbose request sending authorization for write operation
+32 info attempt registry request try #1 at 5:15:44 PM
+33 verbose request using bearer token for auth
+34 verbose request id 50bae188dada476f
+35 http request PUT https://registry.npmjs.org/piperoni
+36 http 403 https://registry.npmjs.org/piperoni
+37 verbose headers { 'content-type': 'application/json',
+37 verbose headers   'cache-control': 'max-age=300',
+37 verbose headers   'content-length': '95',
+37 verbose headers   'accept-ranges': 'bytes',
+37 verbose headers   date: 'Mon, 17 Oct 2016 00:15:45 GMT',
+37 verbose headers   via: '1.1 varnish',
+37 verbose headers   connection: 'keep-alive',
+37 verbose headers   'x-served-by': 'cache-sjc3629-SJC',
+37 verbose headers   'x-cache': 'MISS',
+37 verbose headers   'x-cache-hits': '0',
+37 verbose headers   'x-timer': 'S1476663345.047401,VS0,VE143',
+37 verbose headers   vary: 'Accept-Encoding' }
+38 verbose request invalidating /Users/Matt/.npm/registry.npmjs.org/piperoni on PUT
+39 error publish Failed PUT 403
+40 verbose stack Error: "You cannot publish over the previously published version 0.0.1." : piperoni
+40 verbose stack     at makeError (/Users/Matt/.nvm/v6.3.1/lib/node_modules/npm/node_modules/npm-registry-client/lib/request.js:264:12)
+40 verbose stack     at CachingRegistryClient.<anonymous> (/Users/Matt/.nvm/v6.3.1/lib/node_modules/npm/node_modules/npm-registry-client/lib/request.js:252:14)
+40 verbose stack     at Request._callback (/Users/Matt/.nvm/v6.3.1/lib/node_modules/npm/node_modules/npm-registry-client/lib/request.js:172:14)
+40 verbose stack     at Request.self.callback (/Users/Matt/.nvm/v6.3.1/lib/node_modules/npm/node_modules/request/request.js:200:22)
+40 verbose stack     at emitTwo (events.js:106:13)
+40 verbose stack     at Request.emit (events.js:191:7)
+40 verbose stack     at Request.<anonymous> (/Users/Matt/.nvm/v6.3.1/lib/node_modules/npm/node_modules/request/request.js:1067:10)
+40 verbose stack     at emitOne (events.js:101:20)
+40 verbose stack     at Request.emit (events.js:188:7)
+40 verbose stack     at IncomingMessage.<anonymous> (/Users/Matt/.nvm/v6.3.1/lib/node_modules/npm/node_modules/request/request.js:988:12)
+41 verbose statusCode 403
+42 verbose pkgid piperoni
+43 verbose cwd /Users/Matt/Sites/piperoni
+44 error Darwin 15.6.0
+45 error argv "/Users/Matt/.nvm/v6.3.1/bin/node" "/Users/Matt/.nvm/v6.3.1/bin/npm" "publish" "./"
+46 error node v6.3.1
+47 error npm  v3.10.3
+48 error code E403
+49 error "You cannot publish over the previously published version 0.0.1." : piperoni
+50 error If you need help, you may report this error at:
+50 error     <https://github.com/npm/npm/issues>
+51 verbose exit [ 1, true ]
