@@ -1,6 +1,6 @@
-### PIPER
+### PIPERONI
 
-Piper helps you make pipeable APIs in Javascript.
+Piperoni helps you make pipeable APIs in Javascript.
 
 Piping is composing functions together, feeding the return of one function into the parameters of the next:
 
@@ -12,21 +12,21 @@ Isn't that clear? There are real benefits to modeling as much of your logic as p
 
 Do all these functions have to take one parameter? Yes. There is no free lunch. You only get the benefits of pipes if you cram your logic into pipe-like shapes.
 
-Piper helps you:
+Piperoni helps you:
 
-- Piper uses a familiar Javascript patten, chaining, to fashion pipes:
+- Fashion pipes with familiar, flexible chaining:
 
   `myPipe.doThis().doThat.doTheOtherThing()`
 
-- Piper pipes do not discriminate between sync and async functions:
+- Mix sync and async functions indiscriminately:
 
   `myPipe.doAsyncThing().doSyncThing().doAnotherAsyncThing()`
 
-- Piper exposes utilities from Ramda, which gives every pipe the power of lodash or underscore:
+- Use utilities from Ramda, which gives every pipe the power of lodash or underscore:
 
   `myPipe.zip().map().pluck().etc()`
 
-- Many are the ways to group, then share, related functions:
+- Group, then share, related functions:
 
    Creating methods from functions:
 
@@ -40,14 +40,14 @@ Piper helps you:
 
    `let myPipe = myOtherPipe.clone()`
 
-- Tag methods handle logic that doesn't fit neatly into the data-flow model, i.e, parallelism, conditionals, no-ops:
+- Handle logic that doesn't fit neatly into the data-flow model, i.e, parallelism, conditionals, and no-ops, with tag methods:
 
   ```js
   myPipe.doThis()
         .startParallel() //Tag function
-        .doThat(100)
-        .doThat(1000)
-        .doThat(10000)
+        .doAsync(100)
+        .doAsync(1000)
+        .doAsync(10000)
         .stopParallel() //Tag function
         .doTheOtherThing()
   ```
@@ -58,7 +58,7 @@ Piper helps you:
 "c" is for "compose"
 
 ```js
-const makePipe = require("piper").makePipe
+const makePipe = require("piperoni").makePipe
 const assert = require("assert")
 
 function addOne(x){return x + 1}
@@ -110,7 +110,7 @@ x => x + y
 
 ### Mixins
 
-Piper allows you to group functions together as methods of a pipe. Once they populate pipes, they can also be convenientially shared between pipes.
+Piperoni allows you to group functions together as methods of a pipe. Once they populate pipes, they can also be convenientially shared between pipes.
 
 Suppose you've created this pipe to manipulate files...
 
@@ -139,8 +139,8 @@ myPipe.in("/myDirName")
 Note: find a complete list of Ramda utilities at [Ramda Documentation](http://ramdajs.com/docs/#all). All functions are exposed as pipe methods, but only the higher-order ones will work as methods. The other ones can be accessed at:
 
 ```js
-let Piper = require("piper")
-console.log(Piper.r.someNonCurryingFunction)
+let Piperoni = require("piperoni")
+console.log(Piperoni.r.someNonCurryingFunction)
 ```
 ### Reusing, Composing and Cloning Pipes
 
@@ -188,7 +188,7 @@ To clear the composition from a pipe, _clear_ it.
 
 ### Async
 
-Everything above and below applies to async as well as sync methods and functions. However, Piper does need to differentiate between async and sync functions to compose them together. Consequently, just as all sync functions should be curried to take **one** parameter, all async functions should take **two.**
+Everything above and below applies to async as well as sync methods and functions. However, Piperoni does need to differentiate between async and sync functions to compose them. Consequently, just as all sync functions should be curried to take **one** parameter, all async functions should take **two.**
 
 ```
 //higher-order sync function
@@ -196,7 +196,7 @@ function add(increment){
    return num => num + increment
 }
 
-//the signature of a Piper async function is two params
+//the signature of a Piperoni async function is two params
 //the second is a Node.js-style callback
 
 function waitAndAdd(increment, waitTime){
@@ -208,7 +208,7 @@ function waitAndAdd(increment, waitTime){
    }
 }
 ```
-Piper will use the callback internally to execute a composition.
+Piperoni will use the callback internally to execute a composition.
 
 ### Tag Methods For Non-Linear Logic
 
@@ -251,7 +251,7 @@ myPipe.doThis()
       .stopMaybe()
 ```
 
-Moving conditional and non-linear logic logic out of composable functions and into Piper keeps the functions simpler and more reusable.  
+Moving conditional and non-linear logic logic out of composable functions and into Piperoni keeps the functions simpler and more reusable.  
 
 Adding your own tag methods to a pipe is trivial. Just come up with a name and an associated function that transforms the array of inner functions (the three functions produced by _doAsync_) into a new array of functions.
 
@@ -282,4 +282,4 @@ myPipe.tagize({times: times})
 
 //You are free to use "startTimes(myNum)" and "stopTimes()"."
 ```
-Tag logic often has to treat sync and async functions separately. Consult Piper's _parallel_ and _which_ implementations for guidance.
+Tag logic often has to treat sync and async functions separately. Consult Piperoni's _parallel_ and _which_ implementations for guidance.

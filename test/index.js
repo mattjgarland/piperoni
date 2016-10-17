@@ -1,8 +1,8 @@
 "use strict"
 
-const Piper = require("../index.js")
+const Piperoni = require("../index.js")
+const makePipe = Piperoni.makePipe
 const assert = require("assert")
-const makePipe = Piper.makePipe
 let pipe, pipe2
 
 describe ("Pipe Methods", () => {
@@ -436,7 +436,7 @@ describe ("Tags", () => {
 describe ("Ramda Integration", () => {
 
    it("Piper exposes Ramda.", () => {
-      const r = Piper.r;
+      const r = Piperoni.r;
       let arr = [1,2,3]
       arr = r.map(num => num + 1, arr)
       const sum = r.reduce((sum, inc) => sum + inc, 0, arr)
