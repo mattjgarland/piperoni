@@ -1,7 +1,3 @@
-### PIPERONI
-
-Piperoni helps you make pipeable APIs in Javascript.
-
 Piping is composing functions together, feeding the return of one function into the parameters of the next:
 
 `let output = doThis(doThat(doTheOtherThing(input)))`
@@ -190,7 +186,7 @@ To clear the composition from a pipe, _clear_ it.
 
 Everything above and below applies to async as well as sync methods and functions. However, Piperoni does need to differentiate between async and sync functions to compose them. Consequently, just as all sync functions should be curried to take **one** parameter, all async functions should take **two.**
 
-```
+```js
 //higher-order sync function
 function add(increment){
    return num => num + increment
