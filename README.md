@@ -6,9 +6,9 @@ Isn't that clear? There are real benefits to modeling as much of your logic as p
 
 `let output = oneMoreChange(doThis(doThat(doTheOtherThing(input))))`
 
-Do all these functions have to take one parameter? Yes. There is no free lunch. You only get the benefits of pipes if you cram your logic into pipe-like shapes.
+Do all these functions have to take one parameter? Yes. There is no free lunch. You only get the benefits of pipes if you bend your logic into pipe-like shapes.
 
-Piperoni helps you:
+Piperoni helps you do that:
 
 - Fashion pipes with familiar, flexible chaining:
 

@@ -1,16 +1,70 @@
 "use strict"
 
+/*
+HOW TO USE IT
+
+makePipe makes a pipe. A pipe turns currying functions into chainable methods:
+let pipe = makePipe()
+pipe.methize(curryingFunction)
+pipe.curryingFunction().otherCurryingFunction()
+
+Those currying functions return composable functions when invoked.
+Sync composable functions have one parameter (data).
+Async composable functions have this signature (data, callback).
+Callback signature: (err, data).
+
+Chain in/out to get output:
+pipe.in(input).doThis().doThat().out((err, output) => console.log(output))
+
+Much, much more: https://www.npmjs.com/package/piperoni.
+
+HOW IT WORKS
+
+A pipe is created with arrays for currying functions (curryFs) and composable function (composeFs).
+Currying functions added to the pipe (methize) are stored in (curryFs).
+They are also wrapped in a function (makeMethods) before being added as a methods.
+When called, the wrapper function calls the currying function and stores the returned function in (composeFs)...
+..then returns a proxy for chaining.
+Repeated invocations of chainable methods populate (composeFs).
+When the pipe is executed (exec, in/out), a iterable (gen) is created by a generator (compose).
+Compose is a typical functional compose, except async functions yield promises.
+An async runner (iterable) resolves promises and iterates next until the generator quits...
+...and a value is returned.
+
+HOW IT WORKS: Cloning/State
+
+When a pipe is cloned (clone) it passes its curryFs and composeFs into a new pipe (makePipe).
+The only other state (input, set by "in") is not cloned.
+(clear) zeroes out a (composeFs) and leaves curryFs alone to be called anew.
+When composition begins (exec, in/out), further changes to input and composableFs cannot change its course.
+
+HOW IT WORKS: Tag Functions
+
+Tag functions are created by (tagize).
+Tagize takes a tag name (parallel, which, maybe) and an associated replace function.
+Right before composition, tag functions transform the functions to be composed.
+The composition is mapped to nodes (makeNodes), which identify tag and non-tag functions
+Tags without inner tags are identified by 1. finding the first stop-tag node and going backwards for a match (applyTags).
+Tag nodes are removed and the inner nodes are passed into the tag's replace function (replaceNodes).
+When all tags are parsed, nodes are mapped back to functions and composed.
+
+HOW IT WORKS: Ramda
+When a pipe's method invocation are chained, it returns a proxy (makeProxy) of itself.
+When methods are invoked, the proxy looks for method names on the pipe.
+If it finds them, it invokes them, otherwise it forwards the call to the Ramda library.
+*/
+
 const ramda = require("ramda");
 const NUM_SYNC_ARGS = 1;
 const NUM_ASYNC_ARGS = 2;
 const NOT_FOUND = -1;
 
-function makePipe(parentCurryFs = [], parentPipeFs = []){
+function makePipe(parentCurryFs = [], parentComposeFs = []){
 
-   const o = {}
-   const p = makeProxy(o)
+   const pipe = {}
+   const proxy = makeProxy(pipe)
    const tags = {maybe: maybe, parallel: parallel, which: which}
-   const pipeFs = parentPipeFs
+   const composeFs = parentComposeFs
 
    let curryFs = parentCurryFs
    let input = null
@@ -18,13 +72,13 @@ function makePipe(parentCurryFs = [], parentPipeFs = []){
    makeMethods(curryFs)
    makeTagMethods(tags)
 
-   o.exec = (initValue, cb) => {
+   pipe.exec = (initValue, cb) => {
 
-      let g = compose(initValue)
+      let gen = compose(initValue)
       iterate()
 
       function iterate(oldVal){
-         let {value, done} = g.next(oldVal)
+         let {value, done} = gen.next(oldVal)
          if (done){
             return handle(null, oldVal)
          } else {
@@ -47,79 +101,79 @@ function makePipe(parentCurryFs = [], parentPipeFs = []){
       }
    }
 
-   o.in = function(value){
+   pipe.in = function(value){
       input = value
-      return p
+      return proxy
    }
 
-   o.out = function(cb){
-      o.exec(input, cb)
-      return p
+   pipe.out = function(cb){
+      pipe.exec(input, cb)
+      return proxy
    }
 
-   o.funcize = function(methodName){
+   pipe.funcize = function(methodName){
       const f = function(){
          return function (arg, cb){
-            o.exec(arg, cb)
+            pipe.exec(arg, cb)
          }
       }
       f._name = methodName;
       return f;
    }
 
-   o.methodize = function(...newCurryFs){
+   pipe.methodize = function(...newCurryFs){
       curryFs = curryFs.concat(newCurryFs)
       makeMethods(newCurryFs)
-      return p
+      return proxy
    }
 
-   o.validate = function(){
+   pipe.validate = function(){
       validateFs(newCurryFs)
    }
 
-   o.getCurryFs = function(){
+   pipe.getCurryFs = function(){
       return curryFs
    }
 
-   o.mixin = function(...pipes){
-      pipes.forEach((pipe) => {
-         makeMethods(pipe.getCurryFs())
+   pipe.mixin = function(...pipes){
+      pipes.forEach((p) => {
+         makeMethods(p.getCurryFs())
       })
-      return p
+      return proxy
    }
 
-   o.clone = function(){
-      return makePipe(curryFs.slice(), pipeFs.slice())
+   pipe.clone = function(){
+      return makePipe(curryFs.slice(), composeFs.slice())
    }
 
-   o.clear = function(name){
-      pipeFs.length = 0
-      return p
+   pipe.clear = function(name){
+      composeFs.length = 0
+      return proxy
    }
 
-   o.tagize = function(tags){
+   pipe.tagize = function(tags){
       let tagFuncs = makeTagFs(tags);
       curryFs = curryFs.concat(tagFuncs)
       makeMethods(tagFuncs)
-      return p
+      return proxy
    }
 
-   o.c = function(f){
-      pipeFs.push(f)
-      return p
+   pipe.c = function(f){
+      composeFs.push(f)
+      return proxy
    }
 
-   return p
+   return proxy
 
-   function makeProxy(o){
-      return new Proxy(o, {
+   function makeProxy(p){
+      return new Proxy(p, {
          get: function(target, prop){
-            if(prop in o){
-               return o[prop]
+            if(prop in p){
+               return p[prop]
             } else if (prop in ramda){
                return function(...args){
-                  pipeFs.push(ramda[prop].apply(null, args))
-                  return p
+                  composeFs.push(ramda[prop].apply(null, args))
+                  return proxy
                }
             } else {
                throw new Error("Method not added to pipe: " + prop)
@@ -131,9 +185,9 @@ function makePipe(parentCurryFs = [], parentPipeFs = []){
    function makeMethods(curryFs){
       curryFs.forEach((f) => {
          f._name = f.name || f._name;
-         o[f._name] = (...args) => {
-            pipeFs.push(f.apply(null, args))
-            return p;
+         pipe[f._name] = (...args) => {
+            composeFs.push(f.apply(null, args))
+            return proxy;
          }
       })
    }
@@ -147,12 +201,12 @@ function makePipe(parentCurryFs = [], parentPipeFs = []){
    function* compose(initValue){
 
       let value = initValue
-      const funcs = applyTags(pipeFs)
+      const funcs = applyTags(composeFs)
 
       for (let i = 0; i < funcs.length; i++){
          let f = funcs[i];
          if (f.length === NUM_SYNC_ARGS) {
-            value = yield f(value)
+            value = f(value)
          } else if (f.length === NUM_ASYNC_ARGS) {
             value = yield makePromise(f, value)
          }
@@ -198,20 +252,20 @@ function makePipe(parentCurryFs = [], parentPipeFs = []){
 
    function makeTagFunc(tag, methodStr, isBegin, replaceInnerFs){
 
-      let pipeFs = (one) => {}
-      pipeFs._tag = tag;
-      pipeFs._begin = isBegin
+      let composeFunc = () => {}
+      composeFunc._tag = tag;
+      composeFunc._begin = isBegin
 
-      let curryFs = (...params) => {
+      let curryFunc = (...params) => {
          if (isBegin){
-            pipeFs._params = params
-            pipeFs._replaceInnerFs = replaceInnerFs
+            composeFunc._params = params
+            composeFunc._replaceInnerFs = replaceInnerFs
          }
-         return pipeFs
+         return composeFunc
       }
 
-      curryFs._name = methodStr
-      return curryFs
+      curryFunc._name = methodStr
+      return curryFunc
    }
 
    function makeNodes(funcs){
