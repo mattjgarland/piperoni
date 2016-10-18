@@ -72,6 +72,34 @@ function makePipe(parentCurryFs = [], parentComposeFs = []){
    makeMethods(curryFs)
    makeTagMethods(tags)
 
+   pipe.methodize = function(...newCurryFs){
+      curryFs = curryFs.concat(newCurryFs)
+      makeMethods(newCurryFs)
+      return proxy
+   }
+
+   pipe.tagize = function(tags){
+      let tagFuncs = makeTagFs(tags);
+      curryFs = curryFs.concat(tagFuncs)
+      makeMethods(tagFuncs)
+      return proxy
+   }
+
+   pipe.c = function(f){
+      composeFs.push(f)
+      return proxy
+   }
+
+   pipe.in = function(value){
+      input = value
+      return proxy
+   }
+
+   pipe.out = function(cb){
+      pipe.exec(input, cb)
+      return proxy
+   }
+
    pipe.exec = (initValue, cb) => {
 
       let gen = compose(initValue)
@@ -101,40 +129,6 @@ function makePipe(parentCurryFs = [], parentComposeFs = []){
       }
    }
 
-   pipe.in = function(value){
-      input = value
-      return proxy
-   }
-
-   pipe.out = function(cb){
-      pipe.exec(input, cb)
-      return proxy
-   }
-
-   pipe.funcize = function(methodName){
-      const f = function(){
-         return function (arg, cb){
-            pipe.exec(arg, cb)
-         }
-      }
-      f._name = methodName;
-      return f;
-   }
-
-   pipe.methodize = function(...newCurryFs){
-      curryFs = curryFs.concat(newCurryFs)
-      makeMethods(newCurryFs)
-      return proxy
-   }
-
-   pipe.validate = function(){
-      validateFs(newCurryFs)
-   }
-
-   pipe.getCurryFs = function(){
-      return curryFs
-   }
-
    pipe.mixin = function(...pipes){
       pipes.forEach((p) => {
          makeMethods(p.getCurryFs())
@@ -151,36 +145,25 @@ function makePipe(parentCurryFs = [], parentComposeFs = []){
       return proxy
    }
 
-   pipe.tagize = function(tags){
-      let tagFuncs = makeTagFs(tags);
-      curryFs = curryFs.concat(tagFuncs)
-      makeMethods(tagFuncs)
-      return proxy
+   pipe.funcize = function(methodName){
+      const f = function(){
+         return function (arg, cb){
+            pipe.exec(arg, cb)
+         }
+      }
+      f._name = methodName;
+      return f;
    }
 
-   pipe.c = function(f){
-      composeFs.push(f)
-      return proxy
+   pipe.validate = function(){
+      validateFs(newCurryFs)
+   }
+
+   pipe.getCurryFs = function(){
+      return curryFs
    }
 
    return proxy
-
-   function makeProxy(p){
-      return new Proxy(p, {
-         get: function(target, prop){
-            if(prop in p){
-               return p[prop]
-            } else if (prop in ramda){
-               return function(...args){
-                  composeFs.push(ramda[prop].apply(null, args))
-                  return proxy
-               }
-            } else {
-               throw new Error("Method not added to pipe: " + prop)
-            }
-         }
-      })
-   }
 
    function makeMethods(curryFs){
       curryFs.forEach((f) => {
@@ -214,29 +197,6 @@ function makePipe(parentCurryFs = [], parentComposeFs = []){
       yield value
    }
 
-   function makePromise(f, value){
-      return new Promise((resolve, reject) => {
-         f(value, (err, data) => {
-            if (err){
-               reject(err)
-            } else {
-               resolve(data)
-            }
-         })
-      })
-   }
-
-   function validateFs(curryFs){
-      curryFs.forEach((f) => {
-         let pipeFunc = f()
-         if (typeof pipeFunc !== "function"){
-            throw new Error("To be methodize, a function needs to return a function " + f.toString())
-         } else if (pipeFunc.length !== NUM_SYNC_ARGS && pipeFunc.length !== NUM_ASYNC_ARGS){
-            throw new Error("To be methodize, a function needs to return a function with 1 (sync) or 2 (async) parameters " + f.toString())
-         }
-      })
-   }
-
    function makeTagFs(tags){
       return Object.keys(tags).reduce((arr, baseName) => {
          let tag = baseName.toLowerCase()
@@ -266,28 +226,6 @@ function makePipe(parentCurryFs = [], parentComposeFs = []){
 
       curryFunc._name = methodStr
       return curryFunc
-   }
-
-   function makeNodes(funcs){
-      return funcs.map((f, index) => {
-         if (f._tag){
-            return {
-               func: f,
-               begin: f._begin,
-               tag: f._tag,
-               params: f._params,
-               replaceInnerFs: f._replaceInnerFs
-            }
-         } else {
-            return {
-               func: f,
-               begin: null,
-               tag: null,
-               params: null,
-               replaceInnerFs: null
-            }
-         }
-      })
    }
 
    function applyTags(funcs){
@@ -328,6 +266,28 @@ function makePipe(parentCurryFs = [], parentComposeFs = []){
       function getFirstEndToken(){
          return nodes.findIndex(node => node.begin === false)
       }
+   }
+
+   function makeNodes(funcs){
+      return funcs.map((f, index) => {
+         if (f._tag){
+            return {
+               func: f,
+               begin: f._begin,
+               tag: f._tag,
+               params: f._params,
+               replaceInnerFs: f._replaceInnerFs
+            }
+         } else {
+            return {
+               func: f,
+               begin: null,
+               tag: null,
+               params: null,
+               replaceInnerFs: null
+            }
+         }
+      })
    }
 
    function replaceNodes(replaceInnerFs, startNode, stopNode, nodes){
@@ -390,6 +350,46 @@ function makePipe(parentCurryFs = [], parentComposeFs = []){
          }
       }
       return [picked]
+   }
+
+   function makePromise(f, value){
+      return new Promise((resolve, reject) => {
+         f(value, (err, data) => {
+            if (err){
+               reject(err)
+            } else {
+               resolve(data)
+            }
+         })
+      })
+   }
+
+   function validateFs(curryFs){
+      curryFs.forEach((f) => {
+         let pipeFunc = f()
+         if (typeof pipeFunc !== "function"){
+            throw new Error("To be methodize, a function needs to return a function " + f.toString())
+         } else if (pipeFunc.length !== NUM_SYNC_ARGS && pipeFunc.length !== NUM_ASYNC_ARGS){
+            throw new Error("To be methodize, a function needs to return a function with 1 (sync) or 2 (async) parameters " + f.toString())
+         }
+      })
+   }
+
+   function makeProxy(p){
+      return new Proxy(p, {
+         get: function(target, prop){
+            if(prop in p){
+               return p[prop]
+            } else if (prop in ramda){
+               return function(...args){
+                  composeFs.push(ramda[prop].apply(null, args))
+                  return proxy
+               }
+            } else {
+               throw new Error("Method not added to pipe: " + prop)
+            }
+         }
+      })
    }
 }
 
