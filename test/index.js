@@ -54,7 +54,7 @@ describe ("Pipe Out", () => {
           .c(num => num * 10)
           .in(0)
           .out((err, data) => {
-             assert(data === 100)
+            assert(data === 100)
             done()
          })
    })

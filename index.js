@@ -79,7 +79,7 @@ function makePipe(parentCurryFs = [], parentComposeFs = []){
    }
 
    pipe.tagize = function(tags){
-      let tagFuncs = makeTagFs(tags);
+      let tagFuncs = makeTagFs(tags)
       curryFs = curryFs.concat(tagFuncs)
       makeMethods(tagFuncs)
       return proxy
