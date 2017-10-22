@@ -167,7 +167,7 @@ function makePipe(parentCurryFs = [], parentComposeFs = []){
 
    function makeMethods(curryFs){
       curryFs.forEach((f) => {
-         f._name = f.name || f._name;
+         f._name = f._name || f.name
          pipe[f._name] = (...args) => {
             composeFs.push(f.apply(null, args))
             return proxy;

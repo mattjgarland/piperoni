@@ -30,6 +30,16 @@
             "name": "Launch Scratch",
             "program": "${workspaceRoot}/foo.js",
             "cwd": "${workspaceRoot}"
-        }
+        }, 
+        {     
+			"name": "Run mocha",
+            "type": "node",
+            "request": "launch",
+			"program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
+			"stopOnEntry": false,
+			"args": ["test/index.js"],
+			"cwd": "${workspaceFolder}",
+            "runtimeExecutable": null
+		}
     ]
 }
